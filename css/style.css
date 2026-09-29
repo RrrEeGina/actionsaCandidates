@@ -1,0 +1,130 @@
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #000;
+}
+
+#container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+#overlay > * {
+  pointer-events: auto;
+}
+
+#statusPanel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  backdrop-filter: blur(4px);
+}
+
+#statusLine {
+  flex: 1;
+}
+
+#landingText {
+  align-self: center;
+  text-align: center;
+  padding: 0 16px;
+  animation: landingPopIn 0.6s ease-out;
+}
+
+#landingText .line1,
+#landingText .line2 {
+  font-size: clamp(22px, 7vw, 34px);
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  line-height: 1.25;
+}
+
+#landingText .line2 .landing-highlight {
+  color: #3fe86a;
+}
+
+@keyframes landingPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+#startButton {
+  align-self: center;
+  background: #009724;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+#startButton:disabled {
+  opacity: 0.5;
+}
+
+#startButton[data-started="true"] {
+  display: none;
+}
+
+#scanPrompt {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  color: #3fe86a;
+  background: rgba(0, 0, 0, 0.65);
+  padding: 16px 22px;
+  border-radius: 14px;
+  font-size: 19px;
+  font-weight: 700;
+  text-align: center;
+  max-width: 80vw;
+  pointer-events: none;
+}
+
+#soundToggle {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  backdrop-filter: blur(4px);
+}
