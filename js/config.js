@@ -2243,6 +2243,10 @@ export const CONFIG = {
       candidateName: "Ofentse Jerremia Kombe",
       videoSrc: "assets/videos/default-rustenburg.mp4",
     },
+    "Greater Tzaneen": {
+      candidateName: "Masekamane Michael Mikia Ramothwala",
+      videoSrc: "assets/videos/default-Tzaneen.mp4",
+    },
   },
 
   // District-wide fallback for the 24 ActionSA candidates who stood for
