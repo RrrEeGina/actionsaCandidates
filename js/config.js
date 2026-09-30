@@ -22,7 +22,29 @@ export const CONFIG = {
   // Checked only when wardVideoMap has no entry for that ward; skipped
   // entirely once a video is added for the same WardID.
   wardImageMap: {
-    // "19100115": "assets/images/ward-19100115.jpg",
+    "63701001": "assets/videos/ward-63701001.jpeg",
+    "63701002": "assets/videos/ward-63701002.jpeg",
+    "63701003": "assets/videos/ward-63701003.jpeg",
+    "63701004": "assets/videos/ward-63701004.jpeg",
+    "63701005": "assets/videos/ward-63701005.jpeg",
+    "63701006": "assets/videos/ward-63701006.jpeg",
+    "63701007": "assets/videos/ward-63701007.jpeg",
+    "63701008": "assets/videos/ward-63701008.jpeg",
+    "63701009": "assets/videos/ward-63701009.jpeg",
+    "63701010": "assets/videos/ward-63701010.jpeg",
+    "63701011": "assets/videos/ward-63701011.jpeg",
+    "63701012": "assets/videos/ward-63701012.jpeg",
+    "63701013": "assets/videos/ward-63701013.jpeg",
+    "63701014": "assets/videos/ward-63701014.jpeg",
+    "63701015": "assets/videos/ward-63701015.jpeg",
+    "63701016": "assets/videos/ward-63701016.jpeg",
+    "63701017": "assets/videos/ward-63701017.jpeg",
+    "63701018": "assets/videos/ward-63701018.jpeg",
+    "63701019": "assets/videos/ward-63701019.jpeg",
+    "63701020": "assets/videos/ward-63701020.jpeg",
+    "63701021": "assets/videos/ward-63701021.jpeg",
+    "63701022": "assets/videos/ward-63701022.jpeg",
+    "63701023": "assets/videos/ward-63701023.jpg",
   },
 
   // Per-ward candidate names, keyed by MDB WardID, generated from the IEC
