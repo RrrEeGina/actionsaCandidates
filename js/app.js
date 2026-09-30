@@ -254,6 +254,10 @@ async function main() {
 
   startButton.addEventListener("click", async () => {
     startButton.dataset.started = "true";
+    // The landing page's "GATVOL? ..." text is replaced by the caption drawn
+    // onto the poster itself once it's tracked — leaving both up at once
+    // duplicates the message on screen.
+    landingText.hidden = true;
 
     if (currentPlan.mediaType === "image") {
       mediaMode = "image";
