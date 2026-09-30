@@ -93,8 +93,7 @@ or cross-check via the
 ### No video yet? Use a photo instead
 
 If a ward has no video but you do have a photo, add it to `wardImageMap`
-instead — same WardID keys, checked right after `wardVideoMap` (so a video
-always wins once you add one for the same ward):
+instead — same WardID keys, checked right after `wardVideoMap`:
 
 ```js
 wardImageMap: {
@@ -105,6 +104,11 @@ wardImageMap: {
 Shown as a static image over the poster, same position/size as a video would
 be. If the file 404s (typo, wrong extension), it falls back to the global
 default video automatically rather than showing a broken image.
+
+If a ward has **both** a video and a photo, the video plays once through
+(no looping) and then hands off to the photo, instead of the photo being
+ignored — no extra config needed, this is automatic whenever the same
+WardID has entries in both maps.
 
 ## District candidates
 

@@ -15,6 +15,7 @@ export const CONFIG = {
   // match — if the visitor's ward is here, this plays directly.
   wardVideoMap: {
     // "19100115": "assets/videos/ward-19100115.mp4",
+    "63701010": "assets/videos/ward-63701010.mp4",
   },
 
   // Ward-level photos (jpg/png), keyed by MDB WardID — shown as a static
@@ -2245,7 +2246,7 @@ export const CONFIG = {
     },
     "Greater Tzaneen": {
       candidateName: "Masekamane Michael Mikia Ramothwala",
-      videoSrc: "assets/videos/default-Tzaneen.mp4",
+      videoSrc: "assets/videos/default-tzaneen.mp4",
     },
   },
 

@@ -23,8 +23,10 @@ function setStatus(text) {
 // does NOT represent every ward in that district, so it's never shown as a
 // stand-in name — those wards instead get a generic "VOTE ACTIONSA IN WARD
 // <no>" (see updatePlan). Priority order:
-//   1. A ward-specific video — already tailored to its area.
-//   2. A ward-specific image, if there's no video yet but a photo exists.
+//   1. A ward-specific video — already tailored to its area. If the ward also
+//      has its own photo, the video plays once through and the photo takes
+//      over after, instead of looping the video forever.
+//   2. A ward-specific image alone, if there's no video yet but a photo exists.
 //   3. A municipality fallback video (visitor's ward is inside a configured
 //      local/metro municipality but has no video/image of its own).
 //   4. A district fallback video (visitor's ward's parent DISTRICT is
@@ -60,6 +62,13 @@ async function resolveVideoPlan() {
     }
 
     const wardVideo = CONFIG.wardVideoMap[ward.wardId];
+    const wardImage = CONFIG.wardImageMap[ward.wardId];
+
+    if (wardVideo && wardImage) {
+      setStatus(`Ward ${ward.wardNo}, ${ward.municipality} — playing local video, then photo.`);
+      return { mediaType: "video", mediaSrc: wardVideo, followUpImageSrc: wardImage, candidateName: null, wardNo: ward.wardNo, isFallback: false };
+    }
+
     if (wardVideo) {
       setStatus(`Ward ${ward.wardNo}, ${ward.municipality} — playing local video.`);
       return { mediaType: "video", mediaSrc: wardVideo, candidateName: null, wardNo: ward.wardNo, isFallback: false };
@@ -69,7 +78,6 @@ async function resolveVideoPlan() {
     // takes priority over every tier below when present.
     const candidateName = CONFIG.wardCandidateMap[ward.wardId];
 
-    const wardImage = CONFIG.wardImageMap[ward.wardId];
     if (wardImage) {
       setStatus(`Ward ${ward.wardNo}, ${ward.municipality} — no video yet, showing local photo.`);
       return { mediaType: "image", mediaSrc: wardImage, candidateName: candidateName ?? null, wardNo: ward.wardNo, isFallback: false };
@@ -252,6 +260,25 @@ async function main() {
     video.play().catch((err) => console.warn("Video play blocked", err));
   }
 
+  function switchToImage(src) {
+    mediaMode = "image";
+    soundToggle.hidden = true;
+    video.pause();
+    new THREE.TextureLoader().load(
+      src,
+      (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        material.map = texture;
+        material.needsUpdate = true;
+      },
+      undefined,
+      (err) => {
+        console.warn(`Image not found: ${src} — falling back to the default video.`, err);
+        switchToVideo(CONFIG.defaultFallback.videoSrc);
+      }
+    );
+  }
+
   startButton.addEventListener("click", async () => {
     startButton.dataset.started = "true";
     // The landing page's "GATVOL? ..." text is replaced by the caption drawn
@@ -260,21 +287,7 @@ async function main() {
     landingText.hidden = true;
 
     if (currentPlan.mediaType === "image") {
-      mediaMode = "image";
-      soundToggle.hidden = true;
-      new THREE.TextureLoader().load(
-        currentPlan.mediaSrc,
-        (texture) => {
-          texture.colorSpace = THREE.SRGBColorSpace;
-          material.map = texture;
-          material.needsUpdate = true;
-        },
-        undefined,
-        (err) => {
-          console.warn(`Image not found: ${currentPlan.mediaSrc} — falling back to the default video.`, err);
-          switchToVideo(CONFIG.defaultFallback.videoSrc);
-        }
-      );
+      switchToImage(currentPlan.mediaSrc);
     } else {
       video.src = currentPlan.mediaSrc;
 
@@ -289,6 +302,14 @@ async function main() {
         console.warn(`Video not found: ${currentPlan.mediaSrc} — falling back to the default video.`);
         switchToVideo(CONFIG.defaultFallback.videoSrc);
       });
+
+      // Some wards have both a dedicated video and a follow-up photo — play
+      // the video once through, then hand off to the photo instead of
+      // looping the video forever.
+      if (currentPlan.followUpImageSrc) {
+        video.loop = false;
+        video.addEventListener("ended", () => switchToImage(currentPlan.followUpImageSrc), { once: true });
+      }
     }
 
     // Caption overlaid on the bottom of the poster's video/image (not just
