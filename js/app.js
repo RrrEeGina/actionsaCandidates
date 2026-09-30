@@ -65,15 +65,15 @@ async function resolveVideoPlan() {
       return { mediaType: "video", mediaSrc: wardVideo, candidateName: null, wardNo: ward.wardNo, isFallback: false };
     }
 
-    const wardImage = CONFIG.wardImageMap[ward.wardId];
-    if (wardImage) {
-      setStatus(`Ward ${ward.wardNo}, ${ward.municipality} — no video yet, showing local photo.`);
-      return { mediaType: "image", mediaSrc: wardImage, candidateName: null, wardNo: ward.wardNo, isFallback: false };
-    }
-
     // This ward's own candidate, if ActionSA fielded one directly for it —
     // takes priority over every tier below when present.
     const candidateName = CONFIG.wardCandidateMap[ward.wardId];
+
+    const wardImage = CONFIG.wardImageMap[ward.wardId];
+    if (wardImage) {
+      setStatus(`Ward ${ward.wardNo}, ${ward.municipality} — no video yet, showing local photo.`);
+      return { mediaType: "image", mediaSrc: wardImage, candidateName: candidateName ?? null, wardNo: ward.wardNo, isFallback: false };
+    }
 
     const municipalityFallback = CONFIG.municipalityFallbacks[ward.municipality];
     if (municipalityFallback) {
