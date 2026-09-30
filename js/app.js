@@ -16,20 +16,21 @@ function setStatus(text) {
   statusLine.textContent = text;
 }
 
-// Decide which video to show, and which candidate name (if any) belongs to
-// it. A specific person's name is only ever shown when it's genuinely theirs
-// — an exact ward match, or one of the 3 metros' own mayoral candidate. A
+// Decide what to show, and which candidate name (if any) belongs to it. A
+// specific person's name is only ever shown when it's genuinely theirs — an
+// exact ward match, or one of the 3 metros' own mayoral candidate. A
 // district's "headline" candidate (e.g. Bojanala's Josephine Ramolobeng)
 // does NOT represent every ward in that district, so it's never shown as a
 // stand-in name — those wards instead get a generic "VOTE ACTIONSA IN WARD
-// <no>" (see updatePlan). Priority order for the *video*:
+// <no>" (see updatePlan). Priority order:
 //   1. A ward-specific video — already tailored to its area.
-//   2. A municipality fallback video (visitor's ward is inside a configured
-//      local/metro municipality but has no video of its own).
-//   3. A district fallback video (visitor's ward's parent DISTRICT is
+//   2. A ward-specific image, if there's no video yet but a photo exists.
+//   3. A municipality fallback video (visitor's ward is inside a configured
+//      local/metro municipality but has no video/image of its own).
+//   4. A district fallback video (visitor's ward's parent DISTRICT is
 //      configured — for candidates who stood at district level, with no
 //      local-municipality ward of their own).
-//   4. The global default video (City of Johannesburg's) — anywhere else,
+//   5. The global default video (City of Johannesburg's) — anywhere else,
 //      including when location is unavailable or the ward lookup fails.
 async function resolveVideoPlan() {
   const coords = await getCurrentPosition(CONFIG.geolocationTimeoutMs);
@@ -40,7 +41,8 @@ async function resolveVideoPlan() {
   const useUnknownLocationFallback = (reason) => {
     setStatus(reason);
     return {
-      videoSrc: CONFIG.defaultFallback.videoSrc,
+      mediaType: "video",
+      mediaSrc: CONFIG.defaultFallback.videoSrc,
       candidateName: CONFIG.defaultFallback.candidateName,
       wardNo: null,
       isFallback: true,
@@ -60,7 +62,13 @@ async function resolveVideoPlan() {
     const wardVideo = CONFIG.wardVideoMap[ward.wardId];
     if (wardVideo) {
       setStatus(`Ward ${ward.wardNo}, ${ward.municipality} — playing local video.`);
-      return { videoSrc: wardVideo, candidateName: null, wardNo: ward.wardNo, isFallback: false };
+      return { mediaType: "video", mediaSrc: wardVideo, candidateName: null, wardNo: ward.wardNo, isFallback: false };
+    }
+
+    const wardImage = CONFIG.wardImageMap[ward.wardId];
+    if (wardImage) {
+      setStatus(`Ward ${ward.wardNo}, ${ward.municipality} — no video yet, showing local photo.`);
+      return { mediaType: "image", mediaSrc: wardImage, candidateName: null, wardNo: ward.wardNo, isFallback: false };
     }
 
     // This ward's own candidate, if ActionSA fielded one directly for it —
@@ -70,7 +78,7 @@ async function resolveVideoPlan() {
     const municipalityFallback = CONFIG.municipalityFallbacks[ward.municipality];
     if (municipalityFallback) {
       setStatus(`Ward ${ward.wardNo}, ${ward.municipality} — no local video yet, playing ${candidateName ?? municipalityFallback.candidateName}'s video.`);
-      return { videoSrc: municipalityFallback.videoSrc, candidateName: candidateName ?? municipalityFallback.candidateName, wardNo: ward.wardNo, isFallback: true };
+      return { mediaType: "video", mediaSrc: municipalityFallback.videoSrc, candidateName: candidateName ?? municipalityFallback.candidateName, wardNo: ward.wardNo, isFallback: true };
     }
 
     const districtFallback = CONFIG.districtFallbacks[ward.district];
@@ -78,13 +86,13 @@ async function resolveVideoPlan() {
       setStatus(candidateName
         ? `Ward ${ward.wardNo}, ${ward.district} district — playing ${candidateName}'s district video.`
         : `Ward ${ward.wardNo}, ${ward.district} district — no candidate on record for this ward, playing the district video.`);
-      return { videoSrc: districtFallback.videoSrc, candidateName: candidateName ?? null, wardNo: ward.wardNo, isFallback: true };
+      return { mediaType: "video", mediaSrc: districtFallback.videoSrc, candidateName: candidateName ?? null, wardNo: ward.wardNo, isFallback: true };
     }
 
     setStatus(candidateName
       ? `Ward ${ward.wardNo}, ${ward.municipality} — playing ${candidateName}'s default video.`
       : `Ward ${ward.wardNo}, ${ward.municipality} — no candidate on record, playing default video.`);
-    return { videoSrc: CONFIG.defaultFallback.videoSrc, candidateName: candidateName ?? null, wardNo: ward.wardNo, isFallback: true };
+    return { mediaType: "video", mediaSrc: CONFIG.defaultFallback.videoSrc, candidateName: candidateName ?? null, wardNo: ward.wardNo, isFallback: true };
   } catch (err) {
     console.error("Ward lookup failed", err);
     return useUnknownLocationFallback("Ward lookup failed — playing default video.");
@@ -220,24 +228,68 @@ async function main() {
     soundToggle.textContent = video.muted ? "🔇 Tap for sound" : "🔊 Sound on";
   });
 
+  let mediaMode = "video"; // "video" or "image" — set once currentPlan is known, see startButton handler
+
   anchor.onTargetLost = () => {
-    video.pause();
+    if (mediaMode === "video") video.pause();
     scanPrompt.hidden = false;
   };
 
   anchor.onTargetFound = () => {
     scanPrompt.hidden = true;
-    video.play().catch((err) => console.warn("Video play blocked", err));
-    soundToggle.hidden = false;
+    if (mediaMode === "video") {
+      video.play().catch((err) => console.warn("Video play blocked", err));
+      soundToggle.hidden = false;
+    }
   };
+
+  function switchToVideo(src) {
+    mediaMode = "video";
+    soundToggle.hidden = false;
+    material.map = videoTexture;
+    material.needsUpdate = true;
+    video.src = src;
+    video.play().catch((err) => console.warn("Video play blocked", err));
+  }
 
   startButton.addEventListener("click", async () => {
     startButton.dataset.started = "true";
-    video.src = currentPlan.videoSrc;
 
-    // Caption overlaid on the bottom of the video itself (not just the
-    // landing page), so the message stays visible during playback too.
-    // Skipped only for a direct ward-specific video (already fully localized
+    if (currentPlan.mediaType === "image") {
+      mediaMode = "image";
+      soundToggle.hidden = true;
+      new THREE.TextureLoader().load(
+        currentPlan.mediaSrc,
+        (texture) => {
+          texture.colorSpace = THREE.SRGBColorSpace;
+          material.map = texture;
+          material.needsUpdate = true;
+        },
+        undefined,
+        (err) => {
+          console.warn(`Image not found: ${currentPlan.mediaSrc} — falling back to the default video.`, err);
+          switchToVideo(CONFIG.defaultFallback.videoSrc);
+        }
+      );
+    } else {
+      video.src = currentPlan.mediaSrc;
+
+      // A municipality/district/default fallback's video may not be uploaded
+      // yet — if it fails to load, drop back to the global default video
+      // instead of showing a broken player.
+      let firedVideoFallback = false;
+      video.addEventListener("error", () => {
+        const alreadyOnDefault = currentPlan.mediaSrc === CONFIG.defaultFallback.videoSrc;
+        if (!currentPlan.isFallback || alreadyOnDefault || firedVideoFallback) return;
+        firedVideoFallback = true;
+        console.warn(`Video not found: ${currentPlan.mediaSrc} — falling back to the default video.`);
+        switchToVideo(CONFIG.defaultFallback.videoSrc);
+      });
+    }
+
+    // Caption overlaid on the bottom of the poster's video/image (not just
+    // the landing page), so the message stays visible during playback too.
+    // Skipped only for direct ward-specific media (already fully localized
     // content, no candidateName or wardNo needed).
     if (currentPlan.candidateName || currentPlan.wardNo) {
       const captionCanvas = document.createElement("canvas");
@@ -255,19 +307,6 @@ async function main() {
       captionMesh.position.set(0, -1.2695 / 2 + captionAspect / 2, 0.01);
       anchor.group.add(captionMesh);
     }
-
-    // A municipality/district/default fallback's video may not be uploaded
-    // yet — if it fails to load, drop back to the global default video
-    // instead of showing a broken player.
-    let firedVideoFallback = false;
-    video.addEventListener("error", () => {
-      const alreadyOnDefault = currentPlan.videoSrc === CONFIG.defaultFallback.videoSrc;
-      if (!currentPlan.isFallback || alreadyOnDefault || firedVideoFallback) return;
-      firedVideoFallback = true;
-      console.warn(`Video not found: ${currentPlan.videoSrc} — falling back to the default video.`);
-      video.src = CONFIG.defaultFallback.videoSrc;
-      video.play().catch(() => {});
-    });
 
     setStatus("Point your camera at the poster…");
     scanPrompt.hidden = false;

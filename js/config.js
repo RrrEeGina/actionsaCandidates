@@ -17,6 +17,14 @@ export const CONFIG = {
     // "19100115": "assets/videos/ward-19100115.mp4",
   },
 
+  // Ward-level photos (jpg/png), keyed by MDB WardID — shown as a static
+  // image when a ward has no video of its own yet but does have a photo.
+  // Checked only when wardVideoMap has no entry for that ward; skipped
+  // entirely once a video is added for the same WardID.
+  wardImageMap: {
+    // "19100115": "assets/images/ward-19100115.jpg",
+  },
+
   // Per-ward candidate names, keyed by MDB WardID, generated from the IEC
   // certified candidate list by scripts/extract_candidates_v2.py,
   // scripts/classify_and_match.py and scripts/retry_failed.py (see README

@@ -82,11 +82,29 @@ wardVideoMap: {
 },
 ```
 
-Keys are MDB `WardID` values (8-digit strings). Look one up for a given
-coordinate with a direct query, e.g.:
+Keys are MDB `WardID` values (8-digit strings). The easiest way to find one:
+`wardCandidateMap` in the same file already lists every ward's WardID as a
+comment next to its candidate (e.g. search for `"Moretele, Ward 6"`) — no
+need to query anything. You can also look one up directly:
 `https://services7.arcgis.com/oeoyTUJC8HEeYsRB/arcgis/rest/services/MDB_Wards_2026/FeatureServer/0/query?f=json&geometry=<lon>,<lat>&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=WardID,WardNo,MUNICNAME&returnGeometry=false`,
 or cross-check via the
 [MDB Open Data Portal](https://dataportal-mdb-sa.opendata.arcgis.com/).
+
+### No video yet? Use a photo instead
+
+If a ward has no video but you do have a photo, add it to `wardImageMap`
+instead — same WardID keys, checked right after `wardVideoMap` (so a video
+always wins once you add one for the same ward):
+
+```js
+wardImageMap: {
+  "63701006": "assets/images/ward-63701006.jpg", // Moretele, Ward 6
+},
+```
+
+Shown as a static image over the poster, same position/size as a video would
+be. If the file 404s (typo, wrong extension), it falls back to the global
+default video automatically rather than showing a broken image.
 
 ## District candidates
 
